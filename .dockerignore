@@ -1,0 +1,14 @@
+**/node_modules
+**/.next
+**/.turbo
+.git
+.github
+**/*.md
+**/coverage
+**/playwright-report
+**/test-results
+packages/db/legacy_export.json
+.env
+.env.*
+!.env.example
+infra

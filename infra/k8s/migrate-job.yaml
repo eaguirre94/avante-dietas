@@ -1,0 +1,23 @@
+# Migraciones de esquema como hook PreSync de ArgoCD (corre ANTES del rollout).
+# Usa la imagen "migrator" (build stage con Prisma CLI) que produce el CI:
+#   docker build --target build -t ...:migrator .
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dietas-migrate
+  namespace: dietas
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/erickaguirre130294/avante-dietas-v2:migrator
+          command: ["sh", "-c", "pnpm --filter @avante/db exec prisma migrate deploy"]
+          envFrom:
+            - secretRef:
+                name: dietas-secrets

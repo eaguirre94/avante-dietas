@@ -1,0 +1,23 @@
+# Postgres 17 local para desarrollo. En producción la BD la maneja
+# CloudNativePG dentro de Kubernetes (ver infra/k8s).
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: avante-dietas-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: avante
+      POSTGRES_PASSWORD: avante
+      POSTGRES_DB: dietas
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U avante -d dietas"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  pgdata:

@@ -1,0 +1,29 @@
+# ⚠️ CLAVE para el candado de red: el ingress debe PRESERVAR la IP pública real
+# del cliente (para poder validarla contra AVANTE_CIDRS). Con ingress-nginx eso
+# implica externalTrafficPolicy: Local en el Service del controlador y confiar en
+# el X-Forwarded-For que agrega. TRUST_FORWARDED_FOR=true en el ConfigMap.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dietas-web
+  namespace: dietas
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "2m"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - dietas.complejoavante.com
+      secretName: dietas-tls
+  rules:
+    - host: dietas.complejoavante.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dietas-web
+                port:
+                  number: 80

@@ -1,0 +1,28 @@
+# PostgreSQL 17 gestionado por el operador CloudNativePG.
+# Crea automáticamente el secret  dietas-db-app  con la cadena de conexión.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: dietas-db
+  namespace: dietas
+spec:
+  instances: 2
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: 5Gi
+  bootstrap:
+    initdb:
+      database: dietas
+      owner: avante
+  resources:
+    requests:
+      cpu: "100m"
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  # Respaldos continuos (WAL + base) a almacenamiento de objetos:
+  # backup:
+  #   barmanObjectStore:
+  #     destinationPath: s3://avante-backups/dietas
+  #     s3Credentials: { ... }

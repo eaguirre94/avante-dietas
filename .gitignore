@@ -1,0 +1,31 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# build
+.next/
+dist/
+out/
+.turbo/
+*.tsbuildinfo
+
+# prisma generated client
+packages/db/generated/
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+
+# test artifacts
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# legacy migration scratch
+packages/db/legacy_export.json
+
+# os
+Thumbs.db
+.DS_Store

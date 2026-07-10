@@ -1,0 +1,41 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env", "tsconfig.base.json"],
+  "globalEnv": [
+    "DATABASE_URL",
+    "AUTH_SECRET",
+    "AUTH_TRUST_HOST",
+    "AVANTE_CIDRS",
+    "SEDES",
+    "AUTO_APPROVE_DEVICES",
+    "ALLOW_SELF_REGISTER",
+    "TIMEZONE_OFFSET_HOURS",
+    "TRUST_FORWARDED_FOR",
+    "ALLOW_LOOPBACK",
+    "DEV_MODE"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build", "generate"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {},
+    "typecheck": {
+      "dependsOn": ["^build", "generate"]
+    },
+    "test": {
+      "dependsOn": ["generate"]
+    },
+    "test:e2e": {
+      "cache": false
+    },
+    "generate": {
+      "cache": false
+    }
+  }
+}

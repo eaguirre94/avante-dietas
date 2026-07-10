@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: dietas
+resources:
+  - namespace.yaml
+  - postgres-cluster.yaml
+  - configmap.yaml
+  - migrate-job.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  # secret.example.yaml NO se incluye: el secreto real se gestiona aparte
+  # (Sealed Secrets / SOPS / External Secrets).
+images:
+  - name: ghcr.io/erickaguirre130294/avante-dietas-v2
+    newTag: latest

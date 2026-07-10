@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dietas-config
+  namespace: dietas
+data:
+  AUTH_TRUST_HOST: "true"
+  TRUST_FORWARDED_FOR: "true"
+  ALLOW_LOOPBACK: "false"
+  DEV_MODE: "false"
+  AUTO_APPROVE_DEVICES: "true"
+  ALLOW_SELF_REGISTER: "false"
+  TIMEZONE_OFFSET_HOURS: "-6"
+  # ⚠️ En la nube esto son las IP PÚBLICAS FIJAS de cada sede (no las privadas).
+  AVANTE_CIDRS: "0.0.0.0/32"
+  SEDES: '{"0.0.0.0/32":"Configurar sede"}'

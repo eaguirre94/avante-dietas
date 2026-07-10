@@ -1,0 +1,1335 @@
+generator client {
+  provider        = "prisma-client-js"
+
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["public"]
+}
+
+model alembic_version {
+  version_num String @id(map: "alembic_version_pkc") @db.VarChar(32)
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model alergia_intolerancia {
+  id                            BigInt   @id(map: "pk_alergia_intolerancia") @default(autoincrement())
+  codigo                        String   @unique(map: "uniq_alergia_intolerancia_codigo") @db.VarChar(40)
+  nombre                        String   @db.VarChar(150)
+  alergeno_grupo                String?  @db.VarChar(40)
+  severidad_default             String   @default("ALTA") @db.VarChar(20)
+  requiere_certificacion_medica Boolean  @default(false)
+  activa                        Boolean  @default(true)
+  created_at                    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([alergeno_grupo], map: "idx_alergia_intolerancia_grupo")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model alimentos {
+  id                     Int                      @id @default(autoincrement())
+  codigo                 String                   @unique @db.VarChar(30)
+  nombre                 String                   @db.VarChar(100)
+  unidad_default         String?                  @db.VarChar(20)
+  es_alergeno            Boolean                  @default(false)
+  tipo_alergeno          String?                  @db.VarChar(50)
+  categoria              String?                  @db.VarChar(30)
+  activo                 Boolean                  @default(true)
+  grupo_alimento_id      BigInt?
+  kcal_porcion_ref       Decimal?                 @db.Decimal(7, 2)
+  cho_g                  Decimal?                 @db.Decimal(7, 2)
+  proteina_g             Decimal?                 @db.Decimal(7, 2)
+  grasa_g                Decimal?                 @db.Decimal(7, 2)
+  sodio_mg               Decimal?                 @db.Decimal(8, 2)
+  potasio_mg             Decimal?                 @db.Decimal(8, 2)
+  fosforo_mg             Decimal?                 @db.Decimal(8, 2)
+  fibra_g                Decimal?                 @db.Decimal(6, 2)
+  peso_porcion_g         Decimal?                 @db.Decimal(7, 2)
+  fuente_composicion     String?                  @db.VarChar(40)
+  contiene_lactosa       Boolean                  @default(false)
+  contiene_gluten        Boolean                  @default(false)
+  contiene_huevo         Boolean                  @default(false)
+  contiene_pescado       Boolean                  @default(false)
+  contiene_mariscos      Boolean                  @default(false)
+  contiene_soya          Boolean                  @default(false)
+  contiene_frutos_secos  Boolean                  @default(false)
+  contamina_a            Int[]                    @default([])
+  grupo_alimento         grupo_alimento?          @relation(fields: [grupo_alimento_id], references: [id], onUpdate: NoAction, map: "fk_alimentos_grupo_alimento")
+  inventario_ingrediente inventario_ingrediente[]
+  inventario_lote        inventario_lote[]
+  movimiento_inventario  movimiento_inventario[]
+  plato_alimento         plato_alimento[]
+  platos                 platos[]
+  receta_ingrediente     receta_ingrediente[]
+  solicitud_compra       solicitud_compra[]
+
+  @@index([grupo_alimento_id], map: "idx_alimentos_grupo")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model app_config {
+  key                       String           @id @db.VarChar(80)
+  value                     String
+  value_type                String           @default("STRING") @db.VarChar(20)
+  descripcion               String?
+  modificado_at             DateTime         @default(now()) @db.Timestamptz(6)
+  modificado_por_usuario_id Int?
+  usuarios_dietas           usuarios_dietas? @relation(fields: [modificado_por_usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model atributo_temperatura {
+  id                  BigInt                @id(map: "pk_atributo_temperatura") @default(autoincrement())
+  codigo              String                @unique(map: "uniq_atributo_temperatura_codigo") @db.VarChar(20)
+  nombre              String                @db.VarChar(60)
+  descripcion         String?
+  rango_celsius_min   Decimal?              @db.Decimal(5, 2)
+  rango_celsius_max   Decimal?              @db.Decimal(5, 2)
+  activa              Boolean               @default(true)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  plato_template_slot plato_template_slot[]
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cafeteria_orden {
+  id                         Int                     @id @default(autoincrement())
+  sede_id                    Int
+  cliente_id                 Int?
+  cajero_id                  Int
+  modo_pago                  String                  @db.VarChar(20)
+  total                      Decimal                 @db.Decimal(10, 2)
+  estado                     String                  @default("ABIERTA") @db.VarChar(20)
+  created_at                 DateTime                @default(now()) @db.Timestamptz(6)
+  confirmada_at              DateTime?               @db.Timestamptz(6)
+  cancelada_at               DateTime?               @db.Timestamptz(6)
+  cancelacion_motivo         String?
+  cargo_account_move_line_id Int?
+  cargo_estado               String                  @default("PENDIENTE_PUSH") @db.VarChar(20)
+  cargo_pushed_at            DateTime?               @db.Timestamptz(6)
+  cargo_intentos             Int                     @default(0)
+  cargo_error_msg            String?
+  usuarios_dietas            usuarios_dietas         @relation(fields: [cajero_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  clientes                   clientes?               @relation(fields: [cliente_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sedes                      sedes                   @relation(fields: [sede_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cafeteria_orden_linea      cafeteria_orden_linea[]
+
+  @@index([sede_id, created_at], map: "idx_cafeteria_orden_sede_fecha")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cafeteria_orden_linea {
+  id                 Int                @id @default(autoincrement())
+  orden_id           Int
+  producto_id        Int
+  cantidad           Decimal            @db.Decimal(10, 2)
+  precio_unit        Decimal            @db.Decimal(10, 2)
+  subtotal           Decimal            @db.Decimal(10, 2)
+  cafeteria_orden    cafeteria_orden    @relation(fields: [orden_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  cafeteria_producto cafeteria_producto @relation(fields: [producto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cafeteria_producto {
+  id                    Int                     @id @default(autoincrement())
+  codigo                String                  @unique @db.VarChar(20)
+  nombre                String                  @db.VarChar(120)
+  categoria             String?                 @db.VarChar(40)
+  precio_unit           Decimal                 @db.Decimal(10, 2)
+  foto_url              String?                 @db.VarChar(500)
+  descripcion           String?
+  activo                Boolean                 @default(true)
+  created_at            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                @default(now()) @db.Timestamptz(6)
+  cafeteria_orden_linea cafeteria_orden_linea[]
+
+  @@schema("public")
+}
+
+model categoria_alimento {
+  id          BigInt   @id @default(autoincrement())
+  codigo      String   @unique @db.VarChar(30)
+  nombre      String   @db.VarChar(100)
+  descripcion String?
+  activa      Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model categoria_preparacion {
+  id             BigInt           @id(map: "pk_categoria_preparacion") @default(autoincrement())
+  codigo         String           @unique(map: "uniq_categoria_preparacion_codigo") @db.VarChar(20)
+  nombre         String           @db.VarChar(100)
+  descripcion    String?
+  activa         Boolean          @default(true)
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  plato_template plato_template[]
+  platos         platos[]
+
+  @@schema("public")
+}
+
+model clientes {
+  id                            Int                             @id @default(autoincrement())
+  erp_hospitalizacion_id        Int?                            @unique
+  erp_partner_id                Int?
+  nombre                        String                          @db.VarChar(200)
+  documento                     String?                         @db.VarChar(50)
+  sede_id                       Int
+  habitacion                    String                          @db.VarChar(20)
+  fecha_ingreso                 DateTime                        @db.Date
+  fecha_egreso                  DateTime?                       @db.Date
+  activo                        Boolean                         @default(true)
+  created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  egreso_at                     DateTime?                       @db.Timestamptz(6)
+  cargo_pushed_at               DateTime?                       @db.Timestamptz(6)
+  cargo_account_move_id         Int?
+  cargo_push_attempts           Int                             @default(0)
+  cargo_push_failed_at          DateTime?                       @db.Timestamptz(6)
+  cargo_push_error_msg          String?
+  cafeteria_orden               cafeteria_orden[]
+  sedes                         sedes                           @relation(fields: [sede_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  comida_elegida                comida_elegida[]
+  indicacion_medica             indicacion_medica[]
+  paciente_restriccion_alimento paciente_restriccion_alimento[]
+
+  @@index([sede_id, habitacion], map: "idx_clientes_habitacion")
+  @@index([sede_id, activo], map: "idx_clientes_sede_activo")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model comida_elegida {
+  id                                                                              Int                      @id @default(autoincrement())
+  uuid                                                                            String                   @unique @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  indicacion_id                                                                   Int
+  cliente_id                                                                      Int
+  menu_id                                                                         Int
+  dieta_id                                                                        Int
+  tiempo_id                                                                       Int
+  fecha                                                                           DateTime                 @db.Date
+  estado                                                                          String                   @default("ASIGNADA") @db.VarChar(30)
+  auxiliar_id                                                                     Int?
+  cocinera_id                                                                     Int?
+  notas_paciente                                                                  String?
+  erp_synced                                                                      Boolean                  @default(false)
+  erp_synced_at                                                                   DateTime?                @db.Timestamptz(6)
+  erp_external_id                                                                 String?                  @db.VarChar(50)
+  created_at                                                                      DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                                                                      DateTime                 @default(now()) @db.Timestamptz(6)
+  cargo_account_move_line_id                                                      Int?
+  cargo_estado                                                                    String                   @default("PENDIENTE_PUSH") @db.VarChar(20)
+  cargo_pushed_at                                                                 DateTime?                @db.Timestamptz(6)
+  cargo_intentos                                                                  Int                      @default(0)
+  cargo_error_msg                                                                 String?
+  usuarios_dietas_comida_elegida_auxiliar_idTousuarios_dietas                     usuarios_dietas?         @relation("comida_elegida_auxiliar_idTousuarios_dietas", fields: [auxiliar_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  clientes                                                                        clientes                 @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios_dietas_comida_elegida_cocinera_idTousuarios_dietas                     usuarios_dietas?         @relation("comida_elegida_cocinera_idTousuarios_dietas", fields: [cocinera_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  dietas                                                                          dietas                   @relation(fields: [dieta_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  indicacion_medica                                                               indicacion_medica        @relation(fields: [indicacion_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  menu                                                                            menu                     @relation(fields: [menu_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tiempos                                                                         tiempos                  @relation(fields: [tiempo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  comida_elegida_linea                                                            comida_elegida_linea[]
+  evento_dieta                                                                    evento_dieta[]
+  solicitud_cambio_dieta_solicitud_cambio_dieta_comida_elegida_idTocomida_elegida solicitud_cambio_dieta[] @relation("solicitud_cambio_dieta_comida_elegida_idTocomida_elegida")
+  solicitud_cambio_dieta_solicitud_cambio_dieta_comida_nueva_idTocomida_elegida   solicitud_cambio_dieta[] @relation("solicitud_cambio_dieta_comida_nueva_idTocomida_elegida")
+
+  @@index([cliente_id, fecha], map: "idx_comida_cliente_fecha")
+  @@index([estado, fecha], map: "idx_comida_estado_fecha")
+  @@index([uuid], map: "idx_comida_uuid")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model comida_elegida_linea {
+  id                      Int              @id @default(autoincrement())
+  comida_elegida_id       Int
+  plato_id                Int
+  cantidad                String?          @db.VarChar(50)
+  orden_plato             Int              @default(1)
+  excluido_paciente       Boolean          @default(false)
+  excluido_motivo         String?
+  created_at              DateTime         @default(now()) @db.Timestamptz(6)
+  motivo_exclusion        String?          @db.VarChar(200)
+  excluido_por_usuario_id Int?
+  excluido_at             DateTime?        @db.Timestamptz(6)
+  motivo_tipificado       String?          @db.VarChar(30)
+  menu_opcion_id          BigInt?
+  comida_elegida          comida_elegida   @relation(fields: [comida_elegida_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios_dietas         usuarios_dietas? @relation(fields: [excluido_por_usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  menu_opcion             menu_opcion?     @relation(fields: [menu_opcion_id], references: [id], onUpdate: NoAction)
+  platos                  platos           @relation(fields: [plato_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([comida_elegida_id, plato_id, orden_plato])
+  @@index([menu_opcion_id], map: "ix_cel_menu_opcion")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model conector_gramatical {
+  id                  BigInt                @id(map: "pk_conector_gramatical") @default(autoincrement())
+  codigo              String                @unique(map: "uniq_conector_gramatical_codigo") @db.VarChar(20)
+  valor               String                @db.VarChar(20)
+  tipo                String                @db.VarChar(20)
+  descripcion         String?
+  activa              Boolean               @default(true)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  plato_template_slot plato_template_slot[]
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model dieta_restricciones_alimento {
+  id                     Int      @id @default(autoincrement())
+  dieta_id               Int
+  tipo_alimento          String   @default("alimento") @db.VarChar(20)
+  alimento_id            Int
+  tipo_restriccion       String   @db.VarChar(20)
+  motivo                 String?
+  cantidad_max_porciones Decimal? @db.Decimal(8, 2)
+  activa                 Boolean  @default(true)
+  created_at             DateTime @default(now()) @db.Timestamptz(6)
+  dietas                 dietas   @relation(fields: [dieta_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([dieta_id, tipo_alimento, alimento_id], map: "uniq_drest_dieta_tipo_alimento")
+  @@index([tipo_alimento, alimento_id], map: "idx_drest_alimento_tipo")
+  @@index([dieta_id], map: "idx_drest_dieta")
+  @@schema("public")
+}
+
+model dieta_tiempo {
+  dieta_id  Int
+  tiempo_id Int
+  dietas    dietas  @relation(fields: [dieta_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tiempos   tiempos @relation(fields: [tiempo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([dieta_id, tiempo_id])
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model dieta_tiempo_plato {
+  id                          Int          @id @default(autoincrement())
+  menu_id                     Int
+  dieta_id                    Int
+  tiempo_id                   Int
+  dia_semana                  Int
+  plato_id                    Int
+  cantidad                    String?      @db.VarChar(50)
+  orden_plato                 Int          @default(1)
+  calorias_aporta             Int?
+  confianza                   String?      @default("ALTA") @db.VarChar(10)
+  observacion_v3              String?
+  tipo_item                   String?      @default("PLATO_FIJO") @db.VarChar(30)
+  opciones_disponibles        Json?
+  requiere_validacion_clinica Boolean?     @default(false)
+  menu_opcion_id              BigInt?
+  dietas                      dietas       @relation(fields: [dieta_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  menu                        menu         @relation(fields: [menu_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  menu_opcion                 menu_opcion? @relation(fields: [menu_opcion_id], references: [id], onUpdate: NoAction)
+  platos                      platos       @relation(fields: [plato_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tiempos                     tiempos      @relation(fields: [tiempo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([menu_id, dieta_id, tiempo_id, dia_semana, plato_id, orden_plato])
+  @@index([confianza], map: "idx_dtp_confianza")
+  @@index([dia_semana, tiempo_id], map: "idx_dtp_dia_tiempo")
+  @@index([menu_id, dieta_id], map: "idx_dtp_menu_dieta")
+  @@index([tipo_item], map: "idx_dtp_tipo_item")
+  @@index([menu_opcion_id], map: "ix_dtp_menu_opcion")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model dietas {
+  id                                                                      Int                            @id @default(autoincrement())
+  codigo                                                                  String                         @unique @db.VarChar(20)
+  nombre                                                                  String                         @db.VarChar(100)
+  calorias                                                                Int?
+  cho_pct                                                                 Decimal?                       @db.Decimal(5, 2)
+  prot_pct                                                                Decimal?                       @db.Decimal(5, 2)
+  grasa_pct                                                               Decimal?                       @db.Decimal(5, 2)
+  menu_referencia                                                         String?                        @db.VarChar(50)
+  observaciones                                                           String?
+  activo                                                                  Boolean                        @default(true)
+  erp_dieta_tipo_id                                                       Int?                           @unique(map: "uq_dietas_erp_dieta_tipo_id")
+  erp_code                                                                String?                        @db.VarChar(10)
+  precio_unit                                                             Decimal?                       @db.Decimal(10, 2)
+  comida_elegida                                                          comida_elegida[]
+  dieta_restricciones_alimento                                            dieta_restricciones_alimento[]
+  dieta_tiempo                                                            dieta_tiempo[]
+  dieta_tiempo_plato                                                      dieta_tiempo_plato[]
+  indicacion_medica                                                       indicacion_medica[]
+  menu_opcion                                                             menu_opcion[]
+  solicitud_cambio_dieta_solicitud_cambio_dieta_dieta_nueva_idTodietas    solicitud_cambio_dieta[]       @relation("solicitud_cambio_dieta_dieta_nueva_idTodietas")
+  solicitud_cambio_dieta_solicitud_cambio_dieta_dieta_original_idTodietas solicitud_cambio_dieta[]       @relation("solicitud_cambio_dieta_dieta_original_idTodietas")
+
+  @@index([erp_code], map: "ix_dietas_erp_code")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model evento_dieta {
+  id                BigInt           @id @default(autoincrement())
+  uuid              String           @unique @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  comida_elegida_id Int
+  tipo_evento       String           @db.VarChar(40)
+  estado_anterior   String?          @db.VarChar(30)
+  estado_nuevo      String?          @db.VarChar(30)
+  usuario_id        Int?
+  qr_token          String?          @db.VarChar(64)
+  payload           Json?
+  timestamp_evento  DateTime         @default(now()) @db.Timestamptz(6)
+  timestamp_local   DateTime?        @db.Timestamptz(6)
+  sincronizado      Boolean          @default(true)
+  ip_origen         String?          @db.Inet
+  user_agent        String?
+  comida_elegida    comida_elegida   @relation(fields: [comida_elegida_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios_dietas   usuarios_dietas? @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([comida_elegida_id], map: "idx_evento_comida")
+  @@index([tipo_evento, timestamp_evento], map: "idx_evento_tipo_ts")
+  @@index([usuario_id, timestamp_evento], map: "idx_evento_usuario_ts")
+  @@index([uuid], map: "idx_evento_uuid")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model frutas_disponibles {
+  id                    Int      @id @default(autoincrement())
+  codigo                String   @unique @db.VarChar(30)
+  nombre                String   @db.VarChar(100)
+  es_estacional         Boolean  @default(false)
+  contiene_potasio_alto Boolean  @default(false)
+  activo                Boolean  @default(true)
+  orden_visualizacion   Int      @default(100)
+  notas                 String?
+  created_at            DateTime @default(now()) @db.Timestamptz(6)
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model grupo_alimento {
+  id            BigInt          @id(map: "pk_grupo_alimento") @default(autoincrement())
+  codigo        String          @unique(map: "uniq_grupo_alimento_codigo") @db.VarChar(20)
+  nombre        String          @db.VarChar(100)
+  descripcion   String?
+  activa        Boolean         @default(true)
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  alimentos     alimentos[]
+  producto_base producto_base[]
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model indicacion_medica {
+  id                                                              Int              @id @default(autoincrement())
+  cliente_id                                                      Int
+  dieta_id                                                        Int
+  tiempo_id                                                       Int
+  fecha_aplicacion                                                DateTime         @default(dbgenerated("CURRENT_DATE")) @db.Date
+  enfermera_id                                                    Int
+  doctor_id                                                       Int?
+  notas_clinicas                                                  String?
+  activa                                                          Boolean          @default(true)
+  created_at                                                      DateTime         @default(now()) @db.Timestamptz(6)
+  indicacion_dr_label                                             String?          @db.VarChar(200)
+  condicion_clinica_pre                                           String?          @db.VarChar(40)
+  dieta_se_habilita_al                                            DateTime?        @db.Timestamptz(6)
+  fuera_de_ventana                                                Boolean          @default(false)
+  motivo_override                                                 String?
+  erp_dieta_linea_id                                              Int?             @unique(map: "uq_indicacion_medica_erp_dieta_linea_id")
+  erp_state_synced_at                                             DateTime?        @db.Timestamptz(6)
+  comida_elegida                                                  comida_elegida[]
+  clientes                                                        clientes         @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  dietas                                                          dietas           @relation(fields: [dieta_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios_dietas_indicacion_medica_doctor_idTousuarios_dietas    usuarios_dietas? @relation("indicacion_medica_doctor_idTousuarios_dietas", fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios_dietas_indicacion_medica_enfermera_idTousuarios_dietas usuarios_dietas  @relation("indicacion_medica_enfermera_idTousuarios_dietas", fields: [enfermera_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tiempos                                                         tiempos          @relation(fields: [tiempo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([cliente_id, fecha_aplicacion], map: "idx_indicacion_cliente_fecha")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model inventario_ingrediente {
+  id                    BigInt            @id(map: "pk_inventario_ingrediente") @default(autoincrement())
+  alimento_id           Int
+  sede_id               Int
+  stock_actual_g        Decimal           @default(0) @db.Decimal(12, 3)
+  stock_actual_unidades Decimal           @default(0) @db.Decimal(12, 3)
+  unidad_medida_id      BigInt
+  punto_reorden_g       Decimal?          @db.Decimal(12, 3)
+  stock_minimo_g        Decimal?          @db.Decimal(12, 3)
+  stock_maximo_g        Decimal?          @db.Decimal(12, 3)
+  lead_time_dias        Int               @default(1)
+  proveedor_default     String?           @db.VarChar(120)
+  ubicacion_default_id  BigInt?
+  ultimo_recuento_fecha DateTime?         @db.Date
+  ultimo_movimiento_at  DateTime?         @db.Timestamptz(6)
+  activa                Boolean           @default(true)
+  created_at            DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime          @default(now()) @db.Timestamptz(6)
+  tipo                  String            @default("INGREDIENTE") @db.VarChar(20)
+  alimentos             alimentos         @relation(fields: [alimento_id], references: [id], onUpdate: NoAction, map: "fk_inventario_ingrediente_alimento")
+  sedes                 sedes             @relation(fields: [sede_id], references: [id], onUpdate: NoAction, map: "fk_inventario_ingrediente_sede")
+  ubicacion_cocina      ubicacion_cocina? @relation(fields: [ubicacion_default_id], references: [id], onUpdate: NoAction, map: "fk_inventario_ingrediente_ubicacion")
+  unidad_medida         unidad_medida     @relation(fields: [unidad_medida_id], references: [id], onUpdate: NoAction, map: "fk_inventario_ingrediente_unidad")
+
+  @@unique([alimento_id, sede_id], map: "uniq_inventario_ingrediente_par")
+  @@index([alimento_id], map: "idx_inventario_ingrediente_alimento")
+  @@index([sede_id], map: "idx_inventario_ingrediente_sede")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model inventario_lote {
+  id                        BigInt                  @id(map: "pk_inventario_lote") @default(autoincrement())
+  codigo_lote               String                  @db.VarChar(80)
+  alimento_id               Int
+  sede_id                   Int
+  ubicacion_cocina_id       BigInt?
+  cantidad_inicial_g        Decimal                 @db.Decimal(12, 3)
+  cantidad_actual_g         Decimal                 @db.Decimal(12, 3)
+  cantidad_inicial_unidades Decimal?                @db.Decimal(12, 3)
+  cantidad_actual_unidades  Decimal?                @db.Decimal(12, 3)
+  unidad_medida_id          BigInt
+  fecha_recepcion           DateTime                @default(dbgenerated("CURRENT_DATE")) @db.Date
+  fecha_vencimiento         DateTime                @db.Date
+  fecha_apertura            DateTime?               @db.Date
+  vida_util_post_apertura_h Int?
+  gtin                      String?                 @db.VarChar(14)
+  proveedor                 String?                 @db.VarChar(120)
+  numero_factura            String?                 @db.VarChar(60)
+  costo_unitario            Decimal?                @db.Decimal(10, 4)
+  estado                    String                  @default("DISPONIBLE") @db.VarChar(20)
+  motivo_bloqueo            String?
+  recibido_por              Int?
+  notas                     String?
+  created_at                DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime                @default(now()) @db.Timestamptz(6)
+  alimentos                 alimentos               @relation(fields: [alimento_id], references: [id], onUpdate: NoAction, map: "fk_inventario_lote_alimento")
+  usuarios_dietas           usuarios_dietas?        @relation(fields: [recibido_por], references: [id], onUpdate: NoAction, map: "fk_inventario_lote_recibido_por")
+  sedes                     sedes                   @relation(fields: [sede_id], references: [id], onUpdate: NoAction, map: "fk_inventario_lote_sede")
+  ubicacion_cocina          ubicacion_cocina?       @relation(fields: [ubicacion_cocina_id], references: [id], onUpdate: NoAction, map: "fk_inventario_lote_ubicacion")
+  unidad_medida             unidad_medida           @relation(fields: [unidad_medida_id], references: [id], onUpdate: NoAction, map: "fk_inventario_lote_unidad")
+  movimiento_inventario     movimiento_inventario[]
+  solicitud_compra          solicitud_compra[]
+
+  @@unique([alimento_id, sede_id, codigo_lote], map: "uniq_inventario_lote_codigo")
+  @@index([alimento_id], map: "idx_inventario_lote_alimento")
+  @@index([estado, fecha_vencimiento], map: "idx_inventario_lote_estado")
+  @@index([sede_id], map: "idx_inventario_lote_sede")
+  @@index([ubicacion_cocina_id], map: "idx_inventario_lote_ubicacion")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model lote_porcionado {
+  id                                                                   BigInt            @id(map: "pk_lote_porcionado") @default(autoincrement())
+  plato_id                                                             Int
+  version_plato                                                        Int               @default(1)
+  sede_id                                                              Int
+  ubicacion_cocina_id                                                  BigInt?
+  fecha_produccion                                                     DateTime          @db.Date
+  hora_inicio_produccion                                               DateTime?         @db.Timestamptz(6)
+  hora_fin_produccion                                                  DateTime?         @db.Timestamptz(6)
+  porciones_planeadas                                                  Int
+  porciones_producidas                                                 Int?
+  porciones_servidas                                                   Int?
+  porciones_descartadas                                                Int?
+  peso_total_kg                                                        Decimal?          @db.Decimal(7, 2)
+  vida_util_horas                                                      Int?
+  fecha_caducidad_lote                                                 DateTime?         @db.Timestamptz(6)
+  chef_responsable_id                                                  Int?
+  supervisada_por_id                                                   Int?
+  estado_lote                                                          String            @default("PLANIFICADO") @db.VarChar(20)
+  fecha_servicio_inicio                                                DateTime?         @db.Timestamptz(6)
+  fecha_servicio_fin                                                   DateTime?         @db.Timestamptz(6)
+  observaciones                                                        String?
+  created_at                                                           DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                                                           DateTime          @default(now()) @db.Timestamptz(6)
+  usuarios_dietas_lote_porcionado_chef_responsable_idTousuarios_dietas usuarios_dietas?  @relation("lote_porcionado_chef_responsable_idTousuarios_dietas", fields: [chef_responsable_id], references: [id], onUpdate: NoAction, map: "fk_lote_porcionado_chef")
+  platos                                                               platos            @relation(fields: [plato_id], references: [id], onUpdate: NoAction, map: "fk_lote_porcionado_plato")
+  sedes                                                                sedes             @relation(fields: [sede_id], references: [id], onUpdate: NoAction, map: "fk_lote_porcionado_sede")
+  usuarios_dietas_lote_porcionado_supervisada_por_idTousuarios_dietas  usuarios_dietas?  @relation("lote_porcionado_supervisada_por_idTousuarios_dietas", fields: [supervisada_por_id], references: [id], onUpdate: NoAction, map: "fk_lote_porcionado_supervisor")
+  ubicacion_cocina                                                     ubicacion_cocina? @relation(fields: [ubicacion_cocina_id], references: [id], onUpdate: NoAction, map: "fk_lote_porcionado_ubicacion")
+
+  @@index([estado_lote, fecha_produccion], map: "idx_lote_porcionado_estado")
+  @@index([plato_id, version_plato], map: "idx_lote_porcionado_plato")
+  @@index([sede_id, fecha_produccion(sort: Desc)], map: "idx_lote_porcionado_sede_fecha")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model menu {
+  id                    Int                  @id @default(autoincrement())
+  codigo                String               @unique @db.VarChar(20)
+  nombre                String               @db.VarChar(200)
+  fecha_vigencia_inicio DateTime             @db.Date
+  fecha_vigencia_fin    DateTime?            @db.Date
+  estado                String               @default("borrador") @db.VarChar(20)
+  notas                 String?
+  created_at            DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime             @default(now()) @db.Timestamptz(6)
+  comida_elegida        comida_elegida[]
+  dieta_tiempo_plato    dieta_tiempo_plato[]
+  menu_opcion           menu_opcion[]
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model menu_opcion {
+  id                   BigInt                 @id @default(autoincrement())
+  menu_id              Int
+  dieta_id             Int
+  tiempo_id            Int
+  dia_semana           Int
+  nombre               String                 @db.VarChar(80)
+  descripcion          String?
+  orden                Int                    @default(1)
+  activo               Boolean                @default(true)
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  comida_elegida_linea comida_elegida_linea[]
+  dieta_tiempo_plato   dieta_tiempo_plato[]
+  dietas               dietas                 @relation(fields: [dieta_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  menu                 menu                   @relation(fields: [menu_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tiempos              tiempos                @relation(fields: [tiempo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([menu_id, dieta_id, tiempo_id, dia_semana, orden], map: "uq_menu_opcion_orden")
+  @@index([menu_id, dieta_id, tiempo_id, dia_semana], map: "ix_menu_opcion_lookup")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model movimiento_inventario {
+  id                                                                            BigInt            @id(map: "pk_movimiento_inventario") @default(autoincrement())
+  uuid                                                                          String            @unique(map: "uniq_movimiento_inventario_uuid") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  inventario_lote_id                                                            BigInt
+  alimento_id                                                                   Int
+  sede_id                                                                       Int
+  ubicacion_origen_id                                                           BigInt?
+  ubicacion_destino_id                                                          BigInt?
+  tipo_movimiento                                                               String            @db.VarChar(30)
+  cantidad_g                                                                    Decimal           @db.Decimal(12, 3)
+  cantidad_unidades                                                             Decimal?          @db.Decimal(12, 3)
+  unidad_medida_id                                                              BigInt
+  fecha_movimiento                                                              DateTime          @default(now()) @db.Timestamptz(6)
+  motivo                                                                        String?
+  referencia_documento                                                          String?           @db.VarChar(80)
+  plato_id                                                                      Int?
+  lote_porcionado_id                                                            BigInt?
+  usuario_id                                                                    Int
+  confirmado                                                                    Boolean           @default(true)
+  sincronizado_erp                                                              Boolean           @default(false)
+  sincronizado_at                                                               DateTime?         @db.Timestamptz(6)
+  payload                                                                       Json?
+  created_at                                                                    DateTime          @default(now()) @db.Timestamptz(6)
+  alimentos                                                                     alimentos         @relation(fields: [alimento_id], references: [id], onUpdate: NoAction, map: "fk_movimiento_inventario_alimento")
+  ubicacion_cocina_movimiento_inventario_ubicacion_destino_idToubicacion_cocina ubicacion_cocina? @relation("movimiento_inventario_ubicacion_destino_idToubicacion_cocina", fields: [ubicacion_destino_id], references: [id], onUpdate: NoAction, map: "fk_movimiento_inventario_destino")
+  inventario_lote                                                               inventario_lote   @relation(fields: [inventario_lote_id], references: [id], onUpdate: NoAction, map: "fk_movimiento_inventario_lote")
+  ubicacion_cocina_movimiento_inventario_ubicacion_origen_idToubicacion_cocina  ubicacion_cocina? @relation("movimiento_inventario_ubicacion_origen_idToubicacion_cocina", fields: [ubicacion_origen_id], references: [id], onUpdate: NoAction, map: "fk_movimiento_inventario_origen")
+  platos                                                                        platos?           @relation(fields: [plato_id], references: [id], onUpdate: NoAction, map: "fk_movimiento_inventario_plato")
+  sedes                                                                         sedes             @relation(fields: [sede_id], references: [id], onUpdate: NoAction, map: "fk_movimiento_inventario_sede")
+  unidad_medida                                                                 unidad_medida     @relation(fields: [unidad_medida_id], references: [id], onUpdate: NoAction, map: "fk_movimiento_inventario_unidad")
+  usuarios_dietas                                                               usuarios_dietas   @relation(fields: [usuario_id], references: [id], onUpdate: NoAction, map: "fk_movimiento_inventario_usuario")
+
+  @@index([alimento_id, fecha_movimiento(sort: Desc)], map: "idx_movimiento_inventario_alimento")
+  @@index([inventario_lote_id], map: "idx_movimiento_inventario_lote")
+  @@index([sede_id, fecha_movimiento(sort: Desc)], map: "idx_movimiento_inventario_sede")
+  @@index([tipo_movimiento, fecha_movimiento(sort: Desc)], map: "idx_movimiento_inventario_tipo_fecha")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model paciente_restriccion_alimento {
+  id                                                                                       BigInt           @id @default(autoincrement())
+  paciente_id                                                                              Int
+  tipo_alimento                                                                            String           @db.VarChar(20)
+  alimento_id                                                                              Int
+  grupo_alimentario                                                                        String?          @db.VarChar(40)
+  tipo_restriccion                                                                         String           @db.VarChar(20)
+  severidad                                                                                String?          @db.VarChar(20)
+  motivo_clinico                                                                           String?
+  fuente                                                                                   String           @db.VarChar(40)
+  registrado_por_usuario_id                                                                Int
+  registrado_at                                                                            DateTime         @default(now()) @db.Timestamptz(6)
+  validada_clinicamente                                                                    Boolean          @default(false)
+  validada_por_doctor_id                                                                   Int?
+  validada_at                                                                              DateTime?        @db.Timestamptz(6)
+  contradicha                                                                              Boolean          @default(false)
+  motivo_contradiccion                                                                     String?
+  activa                                                                                   Boolean          @default(true)
+  fecha_inicio                                                                             DateTime         @default(dbgenerated("CURRENT_DATE")) @db.Date
+  fecha_fin                                                                                DateTime?        @db.Date
+  clientes                                                                                 clientes         @relation(fields: [paciente_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  usuarios_dietas_paciente_restriccion_alimento_registrado_por_usuario_idTousuarios_dietas usuarios_dietas  @relation("paciente_restriccion_alimento_registrado_por_usuario_idTousuarios_dietas", fields: [registrado_por_usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios_dietas_paciente_restriccion_alimento_validada_por_doctor_idTousuarios_dietas    usuarios_dietas? @relation("paciente_restriccion_alimento_validada_por_doctor_idTousuarios_dietas", fields: [validada_por_doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([paciente_id, activa], map: "idx_paciente_restr_activa")
+  @@index([paciente_id], map: "idx_paciente_restr_paciente")
+  @@schema("public")
+}
+
+model plato_alimento {
+  plato_id    Int
+  alimento_id Int
+  cantidad    Decimal   @db.Decimal(8, 2)
+  unidad      String    @db.VarChar(20)
+  alimentos   alimentos @relation(fields: [alimento_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  platos      platos    @relation(fields: [plato_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([plato_id, alimento_id])
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model plato_template {
+  id                                                           BigInt                 @id(map: "pk_plato_template") @default(autoincrement())
+  codigo                                                       String                 @unique(map: "uniq_plato_template_codigo") @db.VarChar(60)
+  nombre_compuesto                                             String                 @db.VarChar(250)
+  plato_id_legacy                                              Int?
+  categoria_preparacion_id                                     BigInt?
+  descripcion                                                  String?
+  estado                                                       String                 @default("BORRADOR") @db.VarChar(20)
+  version                                                      Int                    @default(1)
+  activo                                                       Boolean                @default(true)
+  created_at                                                   DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                                                   DateTime               @default(now()) @db.Timestamptz(6)
+  creado_por                                                   Int?
+  aprobado_por                                                 Int?
+  fecha_aprobacion                                             DateTime?              @db.Timestamptz(6)
+  usuarios_dietas_plato_template_aprobado_porTousuarios_dietas usuarios_dietas?       @relation("plato_template_aprobado_porTousuarios_dietas", fields: [aprobado_por], references: [id], onUpdate: NoAction, map: "fk_plato_template_aprobado_por")
+  categoria_preparacion                                        categoria_preparacion? @relation(fields: [categoria_preparacion_id], references: [id], onUpdate: NoAction, map: "fk_plato_template_categoria")
+  usuarios_dietas_plato_template_creado_porTousuarios_dietas   usuarios_dietas?       @relation("plato_template_creado_porTousuarios_dietas", fields: [creado_por], references: [id], onUpdate: NoAction, map: "fk_plato_template_creado_por")
+  platos                                                       platos?                @relation(fields: [plato_id_legacy], references: [id], onUpdate: NoAction, map: "fk_plato_template_legacy")
+  plato_template_slot                                          plato_template_slot[]
+
+  @@index([categoria_preparacion_id], map: "idx_plato_template_categoria")
+  @@index([estado], map: "idx_plato_template_estado")
+  @@index([plato_id_legacy], map: "idx_plato_template_legacy")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model plato_template_slot {
+  id                      BigInt                @id(map: "pk_plato_template_slot") @default(autoincrement())
+  plato_template_id       BigInt
+  orden                   Int
+  slot_type               String                @db.VarChar(30)
+  producto_base_id        BigInt?
+  variante_producto_id    BigInt?
+  atributo_temperatura_id BigInt?
+  conector_gramatical_id  BigInt?
+  tecnica_culinaria_id    BigInt?
+  cantidad                Decimal?              @db.Decimal(8, 3)
+  unidad_medida_id        BigInt?
+  valor_libre             String?               @db.VarChar(120)
+  es_obligatorio          Boolean               @default(true)
+  es_excluyente           Boolean               @default(false)
+  notas                   String?
+  created_at              DateTime              @default(now()) @db.Timestamptz(6)
+  conector_gramatical     conector_gramatical?  @relation(fields: [conector_gramatical_id], references: [id], onUpdate: NoAction, map: "fk_plato_template_slot_conector")
+  producto_base           producto_base?        @relation(fields: [producto_base_id], references: [id], onUpdate: NoAction, map: "fk_plato_template_slot_producto")
+  tecnica_culinaria       tecnica_culinaria?    @relation(fields: [tecnica_culinaria_id], references: [id], onUpdate: NoAction, map: "fk_plato_template_slot_tecnica")
+  atributo_temperatura    atributo_temperatura? @relation(fields: [atributo_temperatura_id], references: [id], onUpdate: NoAction, map: "fk_plato_template_slot_temperatura")
+  plato_template          plato_template        @relation(fields: [plato_template_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_plato_template_slot_template")
+  unidad_medida           unidad_medida?        @relation(fields: [unidad_medida_id], references: [id], onUpdate: NoAction, map: "fk_plato_template_slot_unidad")
+  variante_producto       variante_producto?    @relation(fields: [variante_producto_id], references: [id], onUpdate: NoAction, map: "fk_plato_template_slot_variante")
+
+  @@unique([plato_template_id, orden], map: "uniq_plato_template_slot_orden")
+  @@index([plato_template_id, orden], map: "idx_plato_template_slot_template")
+  @@index([slot_type], map: "idx_plato_template_slot_type")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model platos {
+  id                                                                         Int                       @id @default(autoincrement())
+  codigo                                                                     String                    @unique @db.VarChar(20)
+  nombre_normalizado                                                         String                    @db.VarChar(250)
+  descripcion                                                                String?
+  categoria                                                                  String?                   @db.VarChar(30)
+  calorias_aprox                                                             Int?
+  notas_prep                                                                 String?
+  activo                                                                     Boolean                   @default(true)
+  codigo_v3                                                                  String?                   @db.VarChar(120)
+  fuente_pdf_pagina                                                          Int?
+  alimento_principal_id                                                      Int?
+  tecnica_culinaria_id                                                       BigInt?
+  categoria_preparacion_id                                                   BigInt?
+  apta_blanda                                                                Boolean?
+  apta_diabetica                                                             Boolean?
+  apta_renal                                                                 Boolean?
+  apta_hipoproteica                                                          Boolean?
+  apta_astringente                                                           Boolean?
+  apta_libre_gluten                                                          Boolean?
+  apta_libre_lactosa                                                         Boolean?
+  observaciones_clinicas                                                     String?
+  requiere_validacion                                                        Boolean                   @default(true)
+  version_plato                                                              Int                       @default(1)
+  comida_elegida_linea                                                       comida_elegida_linea[]
+  dieta_tiempo_plato                                                         dieta_tiempo_plato[]
+  lote_porcionado                                                            lote_porcionado[]
+  movimiento_inventario                                                      movimiento_inventario[]
+  plato_alimento                                                             plato_alimento[]
+  plato_template                                                             plato_template[]
+  alimentos                                                                  alimentos?                @relation(fields: [alimento_principal_id], references: [id], onUpdate: NoAction, map: "fk_platos_alimento_principal")
+  categoria_preparacion                                                      categoria_preparacion?    @relation(fields: [categoria_preparacion_id], references: [id], onUpdate: NoAction, map: "fk_platos_categoria_preparacion")
+  tecnica_culinaria                                                          tecnica_culinaria?        @relation(fields: [tecnica_culinaria_id], references: [id], onUpdate: NoAction, map: "fk_platos_tecnica_culinaria")
+  platos_variante_sede                                                       platos_variante_sede[]
+  preparacion_subreceta_preparacion_subreceta_plato_hijo_idToplatos          preparacion_subreceta[]   @relation("preparacion_subreceta_plato_hijo_idToplatos")
+  preparacion_subreceta_preparacion_subreceta_plato_padre_idToplatos         preparacion_subreceta[]   @relation("preparacion_subreceta_plato_padre_idToplatos")
+  receta_ingrediente                                                         receta_ingrediente[]
+  sustitucion_equivalente_sustitucion_equivalente_plato_id_origenToplatos    sustitucion_equivalente[] @relation("sustitucion_equivalente_plato_id_origenToplatos")
+  sustitucion_equivalente_sustitucion_equivalente_plato_id_sustitutoToplatos sustitucion_equivalente[] @relation("sustitucion_equivalente_plato_id_sustitutoToplatos")
+
+  @@index([alimento_principal_id], map: "idx_platos_alimento_principal")
+  @@index([categoria_preparacion_id], map: "idx_platos_categoria_prep")
+  @@index([tecnica_culinaria_id], map: "idx_platos_tecnica")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model platos_variante_sede {
+  id                 Int      @id @default(autoincrement())
+  plato_id           Int
+  sede_id            Int
+  nombre_alternativo String?  @db.VarChar(250)
+  notas_locales      String?
+  activo             Boolean  @default(true)
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  platos             platos   @relation(fields: [plato_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sedes              sedes    @relation(fields: [sede_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([plato_id, sede_id], map: "uniq_pvs_plato_sede")
+  @@index([sede_id], map: "idx_pvs_sede")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model preparacion_subreceta {
+  id                                                  BigInt   @id(map: "pk_preparacion_subreceta") @default(autoincrement())
+  plato_padre_id                                      Int
+  version_padre                                       Int      @default(1)
+  plato_hijo_id                                       Int
+  version_hijo                                        Int      @default(1)
+  cantidad                                            Decimal  @db.Decimal(8, 3)
+  factor_porcion                                      Decimal  @default(1.000) @db.Decimal(5, 3)
+  orden                                               Int      @default(1)
+  observacion                                         String?
+  created_at                                          DateTime @default(now()) @db.Timestamptz(6)
+  platos_preparacion_subreceta_plato_hijo_idToplatos  platos   @relation("preparacion_subreceta_plato_hijo_idToplatos", fields: [plato_hijo_id], references: [id], onUpdate: NoAction, map: "fk_preparacion_subreceta_hijo")
+  platos_preparacion_subreceta_plato_padre_idToplatos platos   @relation("preparacion_subreceta_plato_padre_idToplatos", fields: [plato_padre_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_preparacion_subreceta_padre")
+
+  @@unique([plato_padre_id, version_padre, plato_hijo_id, orden], map: "uniq_preparacion_subreceta_par")
+  @@index([plato_hijo_id], map: "idx_preparacion_subreceta_hijo")
+  @@index([plato_padre_id, version_padre], map: "idx_preparacion_subreceta_padre")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model producto_base {
+  id                  BigInt                @id(map: "pk_producto_base") @default(autoincrement())
+  codigo              String                @unique(map: "uniq_producto_base_codigo") @db.VarChar(40)
+  nombre              String                @db.VarChar(150)
+  nombre_singular     String                @db.VarChar(80)
+  nombre_plural       String?               @db.VarChar(80)
+  categoria           String?               @db.VarChar(40)
+  grupo_alimento_id   BigInt?
+  descripcion         String?
+  activo              Boolean               @default(true)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  plato_template_slot plato_template_slot[]
+  grupo_alimento      grupo_alimento?       @relation(fields: [grupo_alimento_id], references: [id], onUpdate: NoAction, map: "fk_producto_base_grupo")
+  variante_producto   variante_producto[]
+
+  @@index([categoria], map: "idx_producto_base_categoria")
+  @@index([grupo_alimento_id], map: "idx_producto_base_grupo")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model qr_habitacion {
+  id            Int      @id @default(autoincrement())
+  sede_id       Int
+  habitacion    String   @db.VarChar(20)
+  token         String   @unique @db.VarChar(64)
+  activo        Boolean  @default(true)
+  fecha_emision DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  notas         String?
+  sedes         sedes    @relation(fields: [sede_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([sede_id, habitacion])
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model receta_ingrediente {
+  id                      BigInt           @id(map: "pk_receta_ingrediente") @default(autoincrement())
+  plato_id                Int
+  version_plato           Int              @default(1)
+  alimento_id             Int
+  cantidad                Decimal          @db.Decimal(8, 3)
+  unidad_medida_id        BigInt
+  cantidad_en_gramos_calc Decimal?         @db.Decimal(8, 2)
+  es_principal            Boolean          @default(false)
+  es_opcional             Boolean          @default(false)
+  orden                   Int              @default(1)
+  observacion             String?
+  created_at              DateTime         @default(now()) @db.Timestamptz(6)
+  creada_por              Int?
+  momento_descargo        String           @default("PREPARACION") @db.VarChar(20)
+  alimentos               alimentos        @relation(fields: [alimento_id], references: [id], onUpdate: NoAction, map: "fk_receta_ingrediente_alimento")
+  usuarios_dietas         usuarios_dietas? @relation(fields: [creada_por], references: [id], onUpdate: NoAction, map: "fk_receta_ingrediente_creada_por")
+  platos                  platos           @relation(fields: [plato_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_receta_ingrediente_plato")
+  unidad_medida           unidad_medida    @relation(fields: [unidad_medida_id], references: [id], onUpdate: NoAction, map: "fk_receta_ingrediente_unidad")
+
+  @@unique([plato_id, version_plato, alimento_id, orden], map: "uniq_receta_ingrediente_plato_alimento")
+  @@index([alimento_id], map: "idx_receta_ingrediente_alimento")
+  @@index([plato_id, version_plato], map: "idx_receta_ingrediente_plato")
+  @@index([unidad_medida_id], map: "idx_receta_ingrediente_unidad")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model refresh_token {
+  jti             String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id         Int
+  expires_at      DateTime        @db.Timestamptz(6)
+  revoked         Boolean         @default(false)
+  revoked_at      DateTime?       @db.Timestamptz(6)
+  revoked_reason  String?         @db.VarChar(40)
+  user_agent      String?
+  ip_origen       String?         @db.Inet
+  created_at      DateTime        @default(now()) @db.Timestamptz(6)
+  usuarios_dietas usuarios_dietas @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expires_at], map: "idx_refresh_token_expires_at")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model sedes {
+  id                      Int                       @id @default(autoincrement())
+  codigo                  String                    @unique @db.VarChar(10)
+  nombre                  String                    @db.VarChar(100)
+  erp_external_id         Int?
+  activo                  Boolean                   @default(true)
+  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  cafeteria_orden         cafeteria_orden[]
+  clientes                clientes[]
+  inventario_ingrediente  inventario_ingrediente[]
+  inventario_lote         inventario_lote[]
+  lote_porcionado         lote_porcionado[]
+  movimiento_inventario   movimiento_inventario[]
+  platos_variante_sede    platos_variante_sede[]
+  qr_habitacion           qr_habitacion[]
+  solicitud_compra        solicitud_compra[]
+  ubicacion_cocina        ubicacion_cocina[]
+  usuarios_dietas         usuarios_dietas[]
+  ventana_tiempo_registro ventana_tiempo_registro[]
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model solicitud_cambio_dieta {
+  id                                                                                BigInt           @id @default(autoincrement())
+  comida_elegida_id                                                                 Int
+  estado_comida_al_solicitar                                                        String           @db.VarChar(32)
+  dieta_original_id                                                                 Int
+  dieta_nueva_id                                                                    Int
+  motivo_enfermera                                                                  String
+  doctor_autoriza_id                                                                Int?
+  solicitado_por_usuario_id                                                         Int
+  solicitado_at                                                                     DateTime         @default(now()) @db.Timestamptz(6)
+  estado                                                                            String           @default("PENDIENTE_CHEF") @db.VarChar(20)
+  chef_decision_usuario_id                                                          Int?
+  chef_decision_at                                                                  DateTime?        @db.Timestamptz(6)
+  motivo_chef                                                                       String?
+  accion_merma                                                                      String?          @db.VarChar(40)
+  comida_nueva_id                                                                   Int?
+  escalada_chef_corp                                                                Boolean          @default(false)
+  escalada_admin                                                                    Boolean          @default(false)
+  audit_override                                                                    Boolean          @default(false)
+  pushed_to_odoo_at                                                                 DateTime?        @db.Timestamptz(6)
+  push_attempts                                                                     Int              @default(0)
+  push_failed_at                                                                    DateTime?        @db.Timestamptz(6)
+  push_error_msg                                                                    String?
+  usuarios_dietas_solicitud_cambio_dieta_chef_decision_usuario_idTousuarios_dietas  usuarios_dietas? @relation("solicitud_cambio_dieta_chef_decision_usuario_idTousuarios_dietas", fields: [chef_decision_usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  comida_elegida_solicitud_cambio_dieta_comida_elegida_idTocomida_elegida           comida_elegida   @relation("solicitud_cambio_dieta_comida_elegida_idTocomida_elegida", fields: [comida_elegida_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  comida_elegida_solicitud_cambio_dieta_comida_nueva_idTocomida_elegida             comida_elegida?  @relation("solicitud_cambio_dieta_comida_nueva_idTocomida_elegida", fields: [comida_nueva_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  dietas_solicitud_cambio_dieta_dieta_nueva_idTodietas                              dietas           @relation("solicitud_cambio_dieta_dieta_nueva_idTodietas", fields: [dieta_nueva_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  dietas_solicitud_cambio_dieta_dieta_original_idTodietas                           dietas           @relation("solicitud_cambio_dieta_dieta_original_idTodietas", fields: [dieta_original_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios_dietas_solicitud_cambio_dieta_doctor_autoriza_idTousuarios_dietas        usuarios_dietas? @relation("solicitud_cambio_dieta_doctor_autoriza_idTousuarios_dietas", fields: [doctor_autoriza_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios_dietas_solicitud_cambio_dieta_solicitado_por_usuario_idTousuarios_dietas usuarios_dietas  @relation("solicitud_cambio_dieta_solicitado_por_usuario_idTousuarios_dietas", fields: [solicitado_por_usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([comida_elegida_id], map: "idx_solicitud_cambio_comida")
+  @@index([estado, escalada_chef_corp, solicitado_at], map: "idx_solicitud_cambio_cron_sla")
+  @@index([estado], map: "idx_solicitud_cambio_estado")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model solicitud_compra {
+  id                        BigInt           @id @default(autoincrement())
+  sede_id                   Int
+  alimento_id               Int
+  cantidad_solicitada_g     Decimal          @db.Decimal(12, 3)
+  motivo                    String?
+  estado                    String           @default("PENDIENTE") @db.VarChar(20)
+  solicitado_por_usuario_id Int
+  solicitado_at             DateTime         @default(now()) @db.Timestamptz(6)
+  email_enviado_at          DateTime?        @db.Timestamptz(6)
+  email_destinatario        String?          @db.VarChar(200)
+  email_error               String?
+  aprobada_at               DateTime?        @db.Timestamptz(6)
+  aprobada_por              String?          @db.VarChar(120)
+  recibida_at               DateTime?        @db.Timestamptz(6)
+  lote_id_recibido          BigInt?
+  cancelada_at              DateTime?        @db.Timestamptz(6)
+  cancelacion_motivo        String?
+  alimentos                 alimentos        @relation(fields: [alimento_id], references: [id], onUpdate: NoAction)
+  inventario_lote           inventario_lote? @relation(fields: [lote_id_recibido], references: [id], onUpdate: NoAction)
+  sedes                     sedes            @relation(fields: [sede_id], references: [id], onUpdate: NoAction)
+  usuarios_dietas           usuarios_dietas  @relation(fields: [solicitado_por_usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([alimento_id], map: "idx_solicitud_compra_alimento")
+  @@index([sede_id, estado], map: "idx_solicitud_compra_sede_estado")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sustitucion_equivalente {
+  id                                                        BigInt          @id @default(autoincrement())
+  plato_id_origen                                           Int
+  plato_id_sustituto                                        Int
+  motivo_tipificado                                         String
+  score_equivalencia                                        Decimal         @db.Decimal(3, 2)
+  creado_por_usuario_id                                     Int
+  creado_at                                                 DateTime        @default(now()) @db.Timestamptz(6)
+  activo                                                    Boolean         @default(true)
+  usuarios_dietas                                           usuarios_dietas @relation(fields: [creado_por_usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  platos_sustitucion_equivalente_plato_id_origenToplatos    platos          @relation("sustitucion_equivalente_plato_id_origenToplatos", fields: [plato_id_origen], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  platos_sustitucion_equivalente_plato_id_sustitutoToplatos platos          @relation("sustitucion_equivalente_plato_id_sustitutoToplatos", fields: [plato_id_sustituto], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([plato_id_origen, plato_id_sustituto], map: "uq_sustitucion_origen_sustituto")
+  @@index([plato_id_origen, activo, score_equivalencia(sort: Desc)], map: "idx_sustitucion_origen_rank")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sync_log {
+  id              BigInt    @id @default(autoincrement())
+  correlation_id  String    @db.Uuid
+  entidad_tipo    String    @db.VarChar(40)
+  entidad_id_odoo Int?
+  entidad_id_v2   Int?
+  accion          String    @db.VarChar(20)
+  payload_in      Json?
+  payload_out     Json?
+  estado          String    @db.VarChar(20)
+  error           String?
+  retry_count     Int       @default(0)
+  next_retry_at   DateTime? @db.Timestamptz(6)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([correlation_id], map: "idx_sync_log_correlation_id")
+  @@index([entidad_tipo, entidad_id_odoo], map: "idx_sync_log_entidad")
+  @@index([estado], map: "idx_sync_log_estado")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tecnica_culinaria {
+  id                  BigInt                @id(map: "pk_tecnica_culinaria") @default(autoincrement())
+  codigo              String                @unique(map: "uniq_tecnica_culinaria_codigo") @db.VarChar(40)
+  nombre              String                @db.VarChar(100)
+  descripcion         String?
+  requiere_coccion    Boolean               @default(true)
+  altera_macros       Boolean               @default(false)
+  factor_kcal_default Decimal               @default(1.00) @db.Decimal(4, 2)
+  activa              Boolean               @default(true)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  plato_template_slot plato_template_slot[]
+  platos              platos[]
+
+  @@schema("public")
+}
+
+model tiempos {
+  id                 Int                  @id @default(autoincrement())
+  codigo             String               @unique @db.VarChar(10)
+  nombre             String               @db.VarChar(50)
+  orden              Int                  @unique
+  es_refrigerio      Boolean              @default(false)
+  comida_elegida     comida_elegida[]
+  dieta_tiempo       dieta_tiempo[]
+  dieta_tiempo_plato dieta_tiempo_plato[]
+  indicacion_medica  indicacion_medica[]
+  menu_opcion        menu_opcion[]
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ubicacion_cocina {
+  id                                                                                 BigInt                   @id(map: "pk_ubicacion_cocina") @default(autoincrement())
+  sede_id                                                                            Int
+  codigo                                                                             String                   @db.VarChar(30)
+  nombre                                                                             String                   @db.VarChar(120)
+  tipo                                                                               String                   @db.VarChar(20)
+  temperatura_min_c                                                                  Decimal?                 @db.Decimal(5, 2)
+  temperatura_max_c                                                                  Decimal?                 @db.Decimal(5, 2)
+  capacidad_kg                                                                       Decimal?                 @db.Decimal(10, 2)
+  es_estacion_pase                                                                   Boolean                  @default(false)
+  activa                                                                             Boolean                  @default(true)
+  notas                                                                              String?
+  created_at                                                                         DateTime                 @default(now()) @db.Timestamptz(6)
+  inventario_ingrediente                                                             inventario_ingrediente[]
+  inventario_lote                                                                    inventario_lote[]
+  lote_porcionado                                                                    lote_porcionado[]
+  movimiento_inventario_movimiento_inventario_ubicacion_destino_idToubicacion_cocina movimiento_inventario[]  @relation("movimiento_inventario_ubicacion_destino_idToubicacion_cocina")
+  movimiento_inventario_movimiento_inventario_ubicacion_origen_idToubicacion_cocina  movimiento_inventario[]  @relation("movimiento_inventario_ubicacion_origen_idToubicacion_cocina")
+  sedes                                                                              sedes                    @relation(fields: [sede_id], references: [id], onUpdate: NoAction, map: "fk_ubicacion_cocina_sede")
+
+  @@unique([sede_id, codigo], map: "uniq_ubicacion_cocina_sede_cod")
+  @@index([tipo], map: "idx_ubicacion_cocina_tipo")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model unidad_medida {
+  id                     BigInt                   @id(map: "pk_unidad_medida") @default(autoincrement())
+  codigo                 String                   @unique(map: "uniq_unidad_medida_codigo") @db.VarChar(20)
+  nombre                 String                   @db.VarChar(100)
+  abreviatura            String                   @db.VarChar(10)
+  factor_a_gramos        Decimal?                 @db.Decimal(10, 4)
+  factor_a_ml            Decimal?                 @db.Decimal(10, 4)
+  tipo                   String                   @db.VarChar(20)
+  activa                 Boolean                  @default(true)
+  created_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  inventario_ingrediente inventario_ingrediente[]
+  inventario_lote        inventario_lote[]
+  movimiento_inventario  movimiento_inventario[]
+  plato_template_slot    plato_template_slot[]
+  receta_ingrediente     receta_ingrediente[]
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model usda_food_cache {
+  fdc_id              BigInt   @id
+  nombre_es           String   @db.VarChar(500)
+  nombre_en           String   @db.VarChar(500)
+  categoria_avante    String   @db.VarChar(50)
+  categoria_usda      String?  @db.VarChar(80)
+  n_muestras_usda     Int?     @default(1)
+  energia_kcal        Decimal? @db.Decimal(10, 2)
+  energia_kj          Decimal? @db.Decimal(10, 2)
+  proteina_g          Decimal? @db.Decimal(10, 3)
+  grasa_total_g       Decimal? @db.Decimal(10, 3)
+  cho_g               Decimal? @db.Decimal(10, 3)
+  fibra_g             Decimal? @db.Decimal(10, 3)
+  azucares_totales_g  Decimal? @db.Decimal(10, 3)
+  azucares_anadidos_g Decimal? @db.Decimal(10, 3)
+  agua_g              Decimal? @db.Decimal(10, 3)
+  grasa_saturada_g    Decimal? @db.Decimal(10, 3)
+  grasa_trans_g       Decimal? @db.Decimal(10, 3)
+  grasa_monoinsat_g   Decimal? @db.Decimal(10, 3)
+  grasa_poliinsat_g   Decimal? @db.Decimal(10, 3)
+  colesterol_mg       Decimal? @db.Decimal(10, 2)
+  calcio_mg           Decimal? @db.Decimal(10, 2)
+  hierro_mg           Decimal? @db.Decimal(10, 3)
+  magnesio_mg         Decimal? @db.Decimal(10, 2)
+  fosforo_mg          Decimal? @db.Decimal(10, 2)
+  potasio_mg          Decimal? @db.Decimal(10, 2)
+  sodio_mg            Decimal? @db.Decimal(10, 2)
+  zinc_mg             Decimal? @db.Decimal(10, 3)
+  cobre_mg            Decimal? @db.Decimal(10, 3)
+  manganeso_mg        Decimal? @db.Decimal(10, 3)
+  selenio_ug          Decimal? @db.Decimal(10, 3)
+  vit_a_rae_ug        Decimal? @db.Decimal(10, 2)
+  vit_c_mg            Decimal? @db.Decimal(10, 2)
+  vit_d_ug            Decimal? @db.Decimal(10, 3)
+  vit_e_mg            Decimal? @db.Decimal(10, 3)
+  vit_k_ug            Decimal? @db.Decimal(10, 3)
+  tiamina_mg          Decimal? @db.Decimal(10, 3)
+  riboflavina_mg      Decimal? @db.Decimal(10, 3)
+  niacina_mg          Decimal? @db.Decimal(10, 3)
+  vit_b6_mg           Decimal? @db.Decimal(10, 3)
+  folato_ug           Decimal? @db.Decimal(10, 2)
+  vit_b12_ug          Decimal? @db.Decimal(10, 3)
+  pantotenico_mg      Decimal? @db.Decimal(10, 3)
+  colina_mg           Decimal? @db.Decimal(10, 3)
+  trp_g               Decimal? @db.Decimal(10, 4)
+  thr_g               Decimal? @db.Decimal(10, 4)
+  ile_g               Decimal? @db.Decimal(10, 4)
+  leu_g               Decimal? @db.Decimal(10, 4)
+  lys_g               Decimal? @db.Decimal(10, 4)
+  met_g               Decimal? @db.Decimal(10, 4)
+  cys_g               Decimal? @db.Decimal(10, 4)
+  phe_g               Decimal? @db.Decimal(10, 4)
+  tyr_g               Decimal? @db.Decimal(10, 4)
+  val_g               Decimal? @db.Decimal(10, 4)
+  fuente              String   @default("USDA_FDC") @db.VarChar(20)
+  fetched_at          DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([categoria_avante], map: "idx_ufc_categoria_avante")
+  @@index([nombre_en(ops: raw("gin_trgm_ops"))], map: "idx_ufc_nombre_en_trgm", type: Gin)
+  @@index([nombre_es(ops: raw("gin_trgm_ops"))], map: "idx_ufc_nombre_es_trgm", type: Gin)
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model usuarios_dietas {
+  id                                                                                                     Int                             @id @default(autoincrement())
+  username                                                                                               String                          @unique @db.VarChar(60)
+  nombre_completo                                                                                        String                          @db.VarChar(200)
+  email                                                                                                  String?                         @unique @db.VarChar(120)
+  password_hash                                                                                          String                          @db.VarChar(255)
+  rol                                                                                                    String                          @db.VarChar(20)
+  sede_id                                                                                                Int?
+  erp_external_id                                                                                        Int?
+  activo                                                                                                 Boolean                         @default(true)
+  last_login_at                                                                                          DateTime?                       @db.Timestamptz(6)
+  created_at                                                                                             DateTime                        @default(now()) @db.Timestamptz(6)
+  app_config                                                                                             app_config[]
+  cafeteria_orden                                                                                        cafeteria_orden[]
+  comida_elegida_comida_elegida_auxiliar_idTousuarios_dietas                                             comida_elegida[]                @relation("comida_elegida_auxiliar_idTousuarios_dietas")
+  comida_elegida_comida_elegida_cocinera_idTousuarios_dietas                                             comida_elegida[]                @relation("comida_elegida_cocinera_idTousuarios_dietas")
+  comida_elegida_linea                                                                                   comida_elegida_linea[]
+  evento_dieta                                                                                           evento_dieta[]
+  indicacion_medica_indicacion_medica_doctor_idTousuarios_dietas                                         indicacion_medica[]             @relation("indicacion_medica_doctor_idTousuarios_dietas")
+  indicacion_medica_indicacion_medica_enfermera_idTousuarios_dietas                                      indicacion_medica[]             @relation("indicacion_medica_enfermera_idTousuarios_dietas")
+  inventario_lote                                                                                        inventario_lote[]
+  lote_porcionado_lote_porcionado_chef_responsable_idTousuarios_dietas                                   lote_porcionado[]               @relation("lote_porcionado_chef_responsable_idTousuarios_dietas")
+  lote_porcionado_lote_porcionado_supervisada_por_idTousuarios_dietas                                    lote_porcionado[]               @relation("lote_porcionado_supervisada_por_idTousuarios_dietas")
+  movimiento_inventario                                                                                  movimiento_inventario[]
+  paciente_restriccion_alimento_paciente_restriccion_alimento_registrado_por_usuario_idTousuarios_dietas paciente_restriccion_alimento[] @relation("paciente_restriccion_alimento_registrado_por_usuario_idTousuarios_dietas")
+  paciente_restriccion_alimento_paciente_restriccion_alimento_validada_por_doctor_idTousuarios_dietas    paciente_restriccion_alimento[] @relation("paciente_restriccion_alimento_validada_por_doctor_idTousuarios_dietas")
+  plato_template_plato_template_aprobado_porTousuarios_dietas                                            plato_template[]                @relation("plato_template_aprobado_porTousuarios_dietas")
+  plato_template_plato_template_creado_porTousuarios_dietas                                              plato_template[]                @relation("plato_template_creado_porTousuarios_dietas")
+  receta_ingrediente                                                                                     receta_ingrediente[]
+  refresh_token                                                                                          refresh_token[]
+  solicitud_cambio_dieta_solicitud_cambio_dieta_chef_decision_usuario_idTousuarios_dietas                solicitud_cambio_dieta[]        @relation("solicitud_cambio_dieta_chef_decision_usuario_idTousuarios_dietas")
+  solicitud_cambio_dieta_solicitud_cambio_dieta_doctor_autoriza_idTousuarios_dietas                      solicitud_cambio_dieta[]        @relation("solicitud_cambio_dieta_doctor_autoriza_idTousuarios_dietas")
+  solicitud_cambio_dieta_solicitud_cambio_dieta_solicitado_por_usuario_idTousuarios_dietas               solicitud_cambio_dieta[]        @relation("solicitud_cambio_dieta_solicitado_por_usuario_idTousuarios_dietas")
+  solicitud_compra                                                                                       solicitud_compra[]
+  sustitucion_equivalente                                                                                sustitucion_equivalente[]
+  sedes                                                                                                  sedes?                          @relation(fields: [sede_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ventana_tiempo_registro                                                                                ventana_tiempo_registro[]
+  workflow_aprobacion_workflow_aprobacion_aprobador_idTousuarios_dietas                                  workflow_aprobacion[]           @relation("workflow_aprobacion_aprobador_idTousuarios_dietas")
+  workflow_aprobacion_workflow_aprobacion_revisor_idTousuarios_dietas                                    workflow_aprobacion[]           @relation("workflow_aprobacion_revisor_idTousuarios_dietas")
+
+  @@index([rol, sede_id], map: "idx_usuarios_rol_sede")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model variante_producto {
+  id                  BigInt                @id(map: "pk_variante_producto") @default(autoincrement())
+  producto_base_id    BigInt
+  codigo              String                @unique(map: "uniq_variante_producto_codigo") @db.VarChar(40)
+  nombre              String                @db.VarChar(150)
+  descripcion         String?
+  activa              Boolean               @default(true)
+  es_default          Boolean               @default(false)
+  orden               Int                   @default(1)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  plato_template_slot plato_template_slot[]
+  producto_base       producto_base         @relation(fields: [producto_base_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_variante_producto_base")
+
+  @@index([producto_base_id], map: "idx_variante_producto_base")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ventana_tiempo_registro {
+  id                        Int              @id @default(autoincrement())
+  sede_id                   Int
+  tiempo                    String           @db.VarChar(30)
+  hora_inicio               DateTime         @db.Time(6)
+  hora_fin                  DateTime         @db.Time(6)
+  activo                    Boolean          @default(true)
+  permite_override          Boolean          @default(true)
+  requiere_doctor_autoriza  Boolean          @default(true)
+  creado_at                 DateTime         @default(now()) @db.Timestamptz(6)
+  modificado_at             DateTime         @default(now()) @db.Timestamptz(6)
+  modificado_por_usuario_id Int?
+  usuarios_dietas           usuarios_dietas? @relation(fields: [modificado_por_usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sedes                     sedes            @relation(fields: [sede_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([sede_id, tiempo], map: "ventana_unica_por_sede_tiempo")
+  @@index([sede_id], map: "idx_ventana_sede")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model workflow_aprobacion {
+  id                                                                BigInt           @id(map: "pk_workflow_aprobacion") @default(autoincrement())
+  entidad_tipo                                                      String           @db.VarChar(40)
+  entidad_id                                                        BigInt
+  estado                                                            String           @default("BORRADOR") @db.VarChar(20)
+  estado_anterior                                                   String?          @db.VarChar(20)
+  motivo                                                            String?
+  revisor_id                                                        Int?
+  aprobador_id                                                      Int?
+  fecha_evento                                                      DateTime         @default(now()) @db.Timestamptz(6)
+  payload                                                           Json?
+  es_estado_actual                                                  Boolean          @default(true)
+  usuarios_dietas_workflow_aprobacion_aprobador_idTousuarios_dietas usuarios_dietas? @relation("workflow_aprobacion_aprobador_idTousuarios_dietas", fields: [aprobador_id], references: [id], onUpdate: NoAction, map: "fk_workflow_aprobacion_aprobador")
+  usuarios_dietas_workflow_aprobacion_revisor_idTousuarios_dietas   usuarios_dietas? @relation("workflow_aprobacion_revisor_idTousuarios_dietas", fields: [revisor_id], references: [id], onUpdate: NoAction, map: "fk_workflow_aprobacion_revisor")
+
+  @@index([entidad_tipo, entidad_id], map: "idx_workflow_aprobacion_entidad")
+  @@index([estado], map: "idx_workflow_aprobacion_estado")
+  @@schema("public")
+}
