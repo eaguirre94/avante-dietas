@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Arquitectura · Módulo de Dietas AVANTE</title>
+<style>
+  :root{
+    --navy:#1E1E3C; --navy2:#143C78; --cyan:#006EB4; --cyan2:#7FD4FF;
+    --ink:#1f2430; --muted:#5b6474; --line:#e2e7f0; --bg:#eef1f7; --card:#fff;
+    --ok:#1d9e66; --warn:#c47d0e; --danger:#d14361;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,"Segoe UI",system-ui,sans-serif;line-height:1.55}
+  a{color:var(--cyan)}
+  header{background:linear-gradient(125deg,var(--navy2),var(--navy));color:#fff;padding:34px 28px}
+  header .wrap{max-width:1040px;margin:0 auto}
+  .chip{display:inline-block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+    padding:4px 11px;border-radius:999px;margin-bottom:12px}
+  header h1{margin:0;font-size:28px;font-family:"Space Grotesk",Inter,sans-serif}
+  header p{margin:8px 0 0;color:#c3cef0;max-width:75ch}
+  header .repo{margin-top:14px;font-size:14px}
+  header .repo a{color:var(--cyan2);font-weight:600}
+  main{max-width:1040px;margin:0 auto;padding:8px 20px 70px}
+  section{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:22px 24px;margin:20px 0;box-shadow:0 10px 26px -20px rgba(20,60,120,.5)}
+  h2{font-family:"Space Grotesk",Inter,sans-serif;font-size:20px;margin:0 0 4px;color:var(--navy)}
+  h2 .n{color:var(--cyan);font-variant-numeric:tabular-nums;margin-right:8px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  code{background:#eef2f9;border:1px solid var(--line);border-radius:6px;padding:1px 6px;
+    font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.86em}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+  .st{background:#eaf3fb;border:1px solid #cfe3f5;color:var(--navy2);border-radius:10px;
+    padding:7px 11px;font-weight:600;font-size:13px;white-space:nowrap}
+  .st.final{background:#e7f7ef;border-color:#bfe8d3;color:var(--ok)}
+  .arrow{color:var(--cyan);font-weight:700}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+  .mod{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:#fbfcff}
+  .mod h3{margin:0 0 4px;font-size:15px;color:var(--navy2)}
+  .mod p{margin:0;font-size:13px;color:var(--muted)}
+  .mod .role{display:inline-block;margin-top:8px;font-size:11px;background:#eef2f9;
+    border-radius:6px;padding:2px 7px;color:var(--muted)}
+  .layer{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin:4px 0}
+  .box{flex:1;min-width:150px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fbfcff}
+  .box .t{font-weight:700;color:var(--navy2);font-size:14px}
+  .box .d{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .box.db{background:#f2f7ee;border-color:#d9e8cd}
+  .stackgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px}
+  @media(max-width:720px){.stackgrid{grid-template-columns:1fr}}
+  .stackgrid div{font-size:14px;padding:5px 0;border-bottom:1px dashed var(--line)}
+  .stackgrid b{color:var(--navy2)}
+  .badge{font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px}
+  .b-ok{background:#e7f7ef;color:var(--ok)} .b-pend{background:#fdf1de;color:var(--warn)}
+  ul.tight{margin:6px 0;padding-left:20px} ul.tight li{margin:4px 0;font-size:14px}
+  .tree{font-family:"JetBrains Mono",monospace;font-size:12.5px;background:#0f1830;color:#cfe0ff;
+    border-radius:12px;padding:16px 18px;overflow-x:auto;line-height:1.7}
+  .tree .c{color:#7f93c7}
+  footer{max-width:1040px;margin:0 auto;padding:10px 20px 40px;color:var(--muted);font-size:12.5px}
+  @media print{body{background:#fff}section{box-shadow:none;break-inside:avoid}header{background:var(--navy)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="chip">Documento de arquitectura · Handoff</div>
+    <h1>Módulo de Dietas Hospitalarias — AVANTE</h1>
+    <p>Sistema que opera el ciclo completo de la dieta de un paciente: indicación de
+    enfermería → oferta y confirmación del auxiliar → preparación en cocina (KDS) →
+    entrega y cargo. Migrado al stack empresarial estándar de TI. Este documento es
+    la guía para que cualquier persona analice el sistema sin bucear el código.</p>
+    <p class="repo">Repositorio: <a href="https://github.com/eaguirre94/avante-dietas">github.com/eaguirre94/avante-dietas</a>
+    &nbsp;·&nbsp; Local: <code>C:\IT_Avante\avante-dietas</code></p>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <h2><span class="n">1</span>Stack tecnológico (estándar de TI)</h2>
+  <p class="sub">Cada capa cumple la especificación oficial del área de TI.</p>
+  <div class="stackgrid">
+    <div><b>Runtime</b> · Node.js 22 LTS</div>
+    <div><b>Lenguaje</b> · TypeScript 5 (strict)</div>
+    <div><b>Framework</b> · Next.js 16 (App Router, standalone)</div>
+    <div><b>UI</b> · React 19 · Tailwind 4 · shadcn/ui</div>
+    <div><b>API interna (BFF)</b> · tRPC 11 (@trpc/tanstack-react-query)</div>
+    <div><b>Data fetching</b> · TanStack Query 5</div>
+    <div><b>Validación</b> · Zod 4 (contrato único cliente/servidor)</div>
+    <div><b>Formularios</b> · React Hook Form + zodResolver</div>
+    <div><b>ORM</b> · Prisma 6 (multiSchema)</div>
+    <div><b>Base de datos</b> · PostgreSQL 17 (CloudNativePG)</div>
+    <div><b>Autenticación</b> · Auth.js / NextAuth v5</div>
+    <div><b>Testing</b> · Vitest (unit) · Playwright (E2E)</div>
+    <div><b>Monorepo</b> · pnpm workspaces + Turborepo</div>
+    <div><b>CI/CD</b> · GitHub Actions → GHCR → ArgoCD (GitOps)</div>
+    <div><b>Contenedores</b> · Docker multi-stage → Kubernetes</div>
+    <div><b>Estado</b> · <span class="badge b-ok">typecheck · tests · build · smoke live OK</span></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">2</span>Arquitectura en capas</h2>
+  <p class="sub">Cómo fluye una petición, del navegador a la base de datos.</p>
+  <div class="layer">
+    <div class="box"><div class="t">Navegador (PWA)</div><div class="d">React 19 + Tailwind. Pantallas por rol. TanStack Query consume tRPC con tipos end-to-end.</div></div>
+    <div class="box"><div class="t">Next.js 16 · API tRPC</div><div class="d">Routers de negocio + Auth.js v5 (sesión JWT). Contexto con usuario + aislamiento por sede.</div></div>
+    <div class="box"><div class="t">Motores (servidor)</div><div class="d">Máquina de estados, motor de alergias, transiciones + bitácora.</div></div>
+    <div class="box db"><div class="t">Prisma 6 → PostgreSQL</div><div class="d">53 modelos. Hoy Neon; destino CloudNativePG en Kubernetes.</div></div>
+  </div>
+  <p class="sub" style="margin-top:14px">Monorepo (pnpm + Turborepo):</p>
+  <div class="tree">
+avante-dietas/
+├── apps/web/              <span class="c"># Next.js: UI + API tRPC + Auth + motores</span>
+│   └── src/
+│       ├── app/           <span class="c"># /login /enfermeria /auxiliar /cocina /nutricion /tarifas</span>
+│       └── server/        <span class="c"># auth.ts · estados.ts · alergias.ts · trpc/routers/*</span>
+├── packages/validators/   <span class="c"># Contrato Zod (roles, estados, alérgenos, inputs)</span>
+├── packages/db/           <span class="c"># Prisma: schema.prisma (53 tablas) + cliente</span>
+├── infra/k8s/             <span class="c"># Kubernetes + CloudNativePG</span>
+├── infra/argocd/          <span class="c"># ArgoCD Application (GitOps)</span>
+└── .github/workflows/     <span class="c"># CI: typecheck · test · build · imágenes</span>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">3</span>Flujo del paciente (máquina de estados)</h2>
+  <p class="sub">Cada comida recorre estos estados. Cualquier estado no terminal puede ir a <b>CANCELADA</b>.</p>
+  <div class="flow">
+    <span class="st">ASIGNADA</span><span class="arrow">→</span>
+    <span class="st">EN_OFERTA</span><span class="arrow">→</span>
+    <span class="st">OFERTA_CONFIRMADA</span><span class="arrow">→</span>
+    <span class="st">EN_PREPARACION</span><span class="arrow">→</span>
+    <span class="st">LISTA</span><span class="arrow">→</span>
+    <span class="st">EN_TRANSITO</span><span class="arrow">→</span>
+    <span class="st final">ENTREGADA</span>
+  </div>
+  <ul class="tight">
+    <li><b>Enfermería</b> indica la dieta (crea el paciente si no existe) → <code>ASIGNADA</code>.</li>
+    <li><b>Auxiliar</b> ofrece y confirma con el paciente → <code>OFERTA_CONFIRMADA</code>.</li>
+    <li><b>Cocina</b> prepara en el tablero KDS → <code>EN_PREPARACION</code> → <code>LISTA</code>.</li>
+    <li><b>Auxiliar</b> traslada y entrega → <code>ENTREGADA</code> (se contabiliza el cargo).</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">4</span>Módulos y roles</h2>
+  <p class="sub">8 roles. Admin, chef corporativo y nutricionista son <b>transversales</b> (ven todas las sedes); el resto queda acotado a su sede.</p>
+  <div class="cards">
+    <div class="mod"><h3>Enfermería</h3><p>Indicación de dieta por habitación. Regla anti-duplicado (D3).</p><span class="role">enfermera · admin</span></div>
+    <div class="mod"><h3>Auxiliar</h3><p>Ofrecer, confirmar, trasladar y entregar bandejas.</p><span class="role">auxiliar · admin</span></div>
+    <div class="mod"><h3>Cocina (KDS)</h3><p>Cola de bandejas + avisos de alergia "⚠ NO PREPARAR".</p><span class="role">cocinera · admin</span></div>
+    <div class="mod"><h3>Nutrición</h3><p>Catálogo de ingredientes con marca de alérgenos.</p><span class="role">nutricionista · chef · jefe</span></div>
+    <div class="mod"><h3>Tarifas</h3><p>Precio por dieta (default configurable). Solo admin edita.</p><span class="role">admin · lectura otros</span></div>
+    <div class="mod"><h3>Alergias</h3><p>Captura y consulta; resolución texto→catálogo.</p><span class="role">auxiliar · enfermera · doctor</span></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">5</span>Motores clave (la lógica que importa)</h2>
+  <ul class="tight">
+    <li><b>Motor de alergias</b> (<code>server/alergias.ts</code>): una alergia a un alimento se
+      <b>expande a todo su grupo Codex</b> — alérgico a la leche ⇒ evita todos los lácteos.
+      La cocina marca las líneas en conflicto. La captura resuelve texto libre → alimento del
+      catálogo para que igual dispare el bloqueo.</li>
+    <li><b>Máquina de estados</b> (<code>server/estados.ts</code>): valida cada transición;
+      solo permite el camino definido. Con bitácora en <code>evento_dieta</code>.</li>
+    <li><b>Regla D3 anti-duplicado</b> (<code>routers/enfermeria.ts</code>): re-indicar el mismo
+      paciente+tiempo reemplaza la bandeja si aún no está en cocina; si ya está en preparación
+      o más, la bloquea (evita doble bandeja).</li>
+    <li><b>Aislamiento por sede</b> (<code>server/tenancy.ts</code>): filtra por sede salvo roles transversales.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">6</span>Modelo de datos (53 tablas)</h2>
+  <p class="sub">Fuente de verdad: <code>packages/db/prisma/schema.prisma</code>. Agrupadas por dominio:</p>
+  <table>
+    <tr><th>Grupo</th><th>Tablas principales</th></tr>
+    <tr><td>Personas / sedes</td><td><code>usuarios_dietas</code>, <code>sedes</code>, <code>clientes</code> (pacientes), <code>qr_habitacion</code></td></tr>
+    <tr><td>Catálogo clínico</td><td><code>dietas</code>, <code>tiempos</code>, <code>menu</code>, <code>dieta_tiempo_plato</code>, <code>platos</code>, <code>alimentos</code></td></tr>
+    <tr><td>Ciclo de la comida</td><td><code>indicacion_medica</code>, <code>comida_elegida</code> (+ <code>_linea</code>), <code>evento_dieta</code> (bitácora)</td></tr>
+    <tr><td>Alergias</td><td><code>alergia_intolerancia</code>, <code>paciente_restriccion_alimento</code>, <code>plato_alimento</code></td></tr>
+    <tr><td>Inventario</td><td><code>inventario_lote</code>, <code>inventario_ingrediente</code>, <code>movimiento_inventario</code>, <code>receta_ingrediente</code></td></tr>
+    <tr><td>Cafetería / tarifas</td><td><code>cafeteria_orden</code> (+ <code>_linea</code>), <code>cafeteria_producto</code>, precio en <code>dietas.precio_unit</code></td></tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="n">7</span>Dónde vive toda la información</h2>
+  <table>
+    <tr><th>Qué</th><th>Dónde</th></tr>
+    <tr><td>Código, modelo de datos, infra</td><td>Repo público <a href="https://github.com/eaguirre94/avante-dietas">eaguirre94/avante-dietas</a></td></tr>
+    <tr><td>Los datos reales</td><td>PostgreSQL (Neon). Explorable con <code>pnpm --filter @avante/db studio</code></td></tr>
+    <tr><td>Documentación histórica (auditoría, guías, QA)</td><td>Repo v2 privado <code>erickaguirre130294/avante-dietas-v2</code> → carpeta <code>docs/</code></td></tr>
+    <tr><td>App en producción hoy</td><td>v2 (FastAPI + React) desplegada en Render + Cloudflare</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="n">8</span>Cómo analizarlo / correrlo</h2>
+  <div class="tree">
+git clone https://github.com/eaguirre94/avante-dietas
+cd avante-dietas
+pnpm install
+pnpm db:generate                       <span class="c"># genera el cliente Prisma</span>
+pnpm --filter @avante/web dev          <span class="c"># http://localhost:3000 → /login</span>
+
+<span class="c"># verificación</span>
+pnpm typecheck   ·   pnpm test   ·   pnpm --filter @avante/web build
+  </div>
+  <p class="sub" style="margin-top:12px">Requiere <code>apps/web/.env</code> con <code>DATABASE_URL</code> (Postgres) y <code>AUTH_SECRET</code>. Las credenciales reales <b>no</b> están en el repo (van por Secrets).</p>
+</section>
+
+<section>
+  <h2><span class="n">9</span>Estado y pendientes</h2>
+  <p><span class="badge b-ok">HECHO</span> Migración de stack completa y verificada: modelo real (53 tablas), auth contra usuarios reales, módulos y motores, <code>typecheck</code> · <code>tests</code> · <code>build</code> · smoke live (Prisma → BD real: 7 usuarios, 15 dietas, 417 alimentos).</p>
+  <p style="margin-top:10px"><span class="badge b-pend">SIGUIENTE TANDA</span> Descuento de inventario FEFO · módulos de cafetería y reportes · migración de datos a CloudNativePG · deploy a Kubernetes/ArgoCD. La app v2 sigue operando mientras se completa el corte.</p>
+</section>
+
+</main>
+<footer>
+  Complejo Avante · Módulo de Dietas Hospitalarias · Documento de arquitectura para análisis y handoff.
+  Generado a partir del código en <code>eaguirre94/avante-dietas</code>.
+</footer>
+</body>
+</html>
